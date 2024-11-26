@@ -1,0 +1,21 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "next/typescript",
+    "eslint:recommended",
+    "prettier"
+  ],
+  "globals": {
+    "JSX": "readonly"
+  },
+  "plugins": ["unused-imports"],
+  "rules": {
+    "@typescript-eslint/no-empty-object-type": "off",
+    "react/no-unescaped-entities": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "no-duplicate-case": "off", // this will turn off a rule
+    "no-unused-vars": "warn", // this will notify violation but not output error
+    "no-func-assign": "error", // this will notify violation and outputs error
+    "unused-imports/no-unused-imports": "error"
+  }
+}

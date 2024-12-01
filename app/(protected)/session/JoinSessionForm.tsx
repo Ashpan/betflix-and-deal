@@ -15,7 +15,7 @@ const FormSchema = z.object({
   }),
 });
 
-const JoinSessionForm = ({ user }: { user?: User }) => {
+export const JoinSessionForm = ({ user }: { user?: User }) => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -24,10 +24,10 @@ const JoinSessionForm = ({ user }: { user?: User }) => {
   });
   const { handleSubmit } = form;
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
     console.log(data);
     console.log(user);
-  }
+  };
 
   return (
     <Form {...form}>
@@ -43,5 +43,3 @@ const JoinSessionForm = ({ user }: { user?: User }) => {
     </Form>
   );
 };
-
-export default JoinSessionForm;

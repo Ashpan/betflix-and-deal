@@ -21,7 +21,7 @@ const FormSchema = z.object({
   }),
 });
 
-const CreateSessionForm = ({ user }: { user: User }) => {
+export const CreateSessionForm = ({ user }: { user: User }) => {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -54,7 +54,7 @@ const CreateSessionForm = ({ user }: { user: User }) => {
         description: "Session created successfully.",
       });
       form.reset();
-      redirect(`/session/${code}`);
+      redirect(`/session/${code}/lobby`);
     }
   };
 
@@ -78,5 +78,3 @@ const CreateSessionForm = ({ user }: { user: User }) => {
     </Form>
   );
 };
-
-export default CreateSessionForm;

@@ -6,7 +6,7 @@ const SessionLobby = async ({
   console.log(await params);
   return (
     <div>
-      <h1>SessionLobby</h1>
+      <h1>Session Lobby</h1>
     </div>
   );
 };

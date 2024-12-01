@@ -2,11 +2,7 @@ import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const RootLayout = async ({ children }: { children: React.ReactNode }) => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,4 +12,6 @@ export default async function RootLayout({
   }
 
   return <>{children}</>;
-}
+};
+
+export default RootLayout;

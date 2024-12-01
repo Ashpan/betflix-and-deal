@@ -1,9 +1,9 @@
-import JoinSessionForm from "./JoinSessionForm";
-import { Metadata } from "next";
 import { Header } from "@/components/Header";
-import CreateSessionForm from "./CreateSessionForm";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/utils/supabase/server";
+import { Metadata } from "next";
+import { CreateSessionForm } from "./CreateSessionForm";
+import { JoinSessionForm } from "./JoinSessionForm";
 
 export const metadata: Metadata = {
   title: "Sessions",

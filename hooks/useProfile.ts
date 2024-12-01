@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Tables } from "@/lib/types/database.types";
 import { createClient } from "@/utils/supabase/client";
 
-export function useProfile() {
+export const useProfile = () => {
   createClient();
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ export function useProfile() {
     };
   }, [loadProfile, supabase]);
 
-  async function updateProfile(updates: Partial<Tables<"profiles">>) {
+  const updateProfile = async (updates: Partial<Tables<"profiles">>) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -68,7 +68,7 @@ export function useProfile() {
       console.error("Error updating profile:", error);
       return { error };
     }
-  }
+  };
 
   return { profile, loading, updateProfile };
-}
+};

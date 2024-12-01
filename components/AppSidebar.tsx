@@ -37,7 +37,7 @@ const items = [
     authState: "unauthenticated",
   },
   {
-    title: "New Session",
+    title: "Sessions",
     url: "/session",
     icon: Calendar,
     authState: "authenticated",

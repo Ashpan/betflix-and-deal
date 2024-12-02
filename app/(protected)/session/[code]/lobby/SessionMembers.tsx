@@ -2,40 +2,38 @@
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getMember, getMembers } from "@/lib/supabase/queries";
+import { Tables } from "@/lib/types/database.types";
+import { IUser } from "@/lib/types/types";
 import { createClient } from "@/utils/supabase/client";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
 const SessionMembers = ({ sessionCode }: { sessionCode: string }) => {
-  const [members, setMembers] = useState<[]>([]);
+  const [members, setMembers] = useState<IUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
       try {
         const { data, error } = await getMembers(sessionCode);
-        if (error) {
+        if (error || !data) {
           throw error;
         }
-        const members =
-          data === null
-            ? []
-            : data.session_participants.map((member) => {
-                return { ...member.profiles, sp_id: member.id };
-              });
-        setMembers(members);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        setError(error.message);
+        setMembers(data);
+      } catch (error: unknown) {
+        const e = error as Error;
+        setError(e.message);
       }
     };
 
     fetchMembers();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleSub = async (payload: any) => {
+    const handleSub = async (
+      payload: RealtimePostgresChangesPayload<Tables<"session_participants">>,
+    ) => {
+      console.log(payload);
       switch (payload.eventType) {
-        case "INSERT":
-          // eslint-disable-next-line no-case-declarations
+        case "INSERT": {
           const { data, error } = await getMember(
             payload.new.user_id,
             sessionCode,
@@ -44,11 +42,16 @@ const SessionMembers = ({ sessionCode }: { sessionCode: string }) => {
             console.error(error);
             break;
           }
+          if (!data) {
+            break;
+          }
           setMembers((prev) => [...prev, data]);
           break;
-        case "DELETE":
+        }
+        case "DELETE": {
           setMembers((prev) => prev.filter((m) => m.sp_id !== payload.old.id));
           break;
+        }
         default:
           break;
       }
@@ -78,7 +81,7 @@ const SessionMembers = ({ sessionCode }: { sessionCode: string }) => {
       ) : (
         <ul className="space-y-2">
           {members.map((member) => (
-            <li key={member.sp_id}>{member.username || member.id}</li>
+            <li key={member.sp_id}>{member.display_name || member.username}</li>
           ))}
         </ul>
       )}

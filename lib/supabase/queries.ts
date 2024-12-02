@@ -1,35 +1,49 @@
-import { createClient as createCClient } from "@/utils/supabase/client";
-import { ICreateSessionPayload } from "../types/types";
-// import { createClient as createSClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
+import {
+  ICreateSessionPayload,
+  IUser,
+  ISessionParticipantProfile,
+} from "../types/types";
 
 export const createSession = async (payload: ICreateSessionPayload) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase.from("sessions").insert([payload]);
   return { data, error };
 };
 
 export const getMembers = async (lobbyCode: string) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("sessions")
     .select(
       `
-    id,
-    session_participants (
+      id,
+      session_participants (
       id,
       profiles (
-        *
-      )
-    )
-    `,
+        id,
+        avatar_url,
+        email,
+        username,
+        display_name
+        )
+      )`,
     )
     .eq("code", lobbyCode)
     .single();
-  return { data, error };
+
+  const transformedData = (
+    data
+      ? data.session_participants.map((member: ISessionParticipantProfile) => {
+          return { ...member.profiles, sp_id: member.id };
+        })
+      : null
+  ) as IUser[] | null;
+  return { data: transformedData, error };
 };
 
 export const getMember = async (userId: string, sessionCode: string) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("session_participants")
     .select(
@@ -37,11 +51,9 @@ export const getMember = async (userId: string, sessionCode: string) => {
     sp_id:id,
     profiles!inner(
       avatar_url,
-      created_at,
       display_name,
       email,
       id,
-      updated_at,
       username
     ),
     sessions!inner()
@@ -50,17 +62,19 @@ export const getMember = async (userId: string, sessionCode: string) => {
     .eq("user_id", userId)
     .eq("sessions.code", sessionCode)
     .single();
-  const transformedData = data
-    ? {
-        sp_id: data.sp_id,
-        ...data.profiles,
-      }
-    : null;
+  const transformedData = (
+    data
+      ? {
+          sp_id: data.sp_id,
+          ...data.profiles,
+        }
+      : null
+  ) as IUser | null;
   return { data: transformedData, error };
 };
 
 export const getSession = async (lobbyCode: string) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("sessions")
     .select("*")
@@ -70,7 +84,7 @@ export const getSession = async (lobbyCode: string) => {
 };
 
 export const isUserInSession = async (userId: string, lobbyCode: string) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("sessions")
     .select("session_participants(id)")
@@ -89,7 +103,7 @@ export const isUserInSession = async (userId: string, lobbyCode: string) => {
 };
 
 export const joinSession = async (sessionCode: string) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase.rpc("join_session", {
     p_session_code: sessionCode,
   });
@@ -97,7 +111,7 @@ export const joinSession = async (sessionCode: string) => {
 };
 
 export const leaveSession = async (sessionCode: string) => {
-  const supabase = createCClient();
+  const supabase = createClient();
   const { data, error } = await supabase.rpc("leave_session", {
     p_session_code: sessionCode,
   });

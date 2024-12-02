@@ -28,7 +28,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/(auth)/layout.tsx"
+    "app/(auth)/layout.tsx",
+    "app/(protected)/layout.tsx"
   ],
   "exclude": ["node_modules"]
 }

@@ -1,7 +1,7 @@
 const SessionLobby = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ code: string }>;
 }) => {
   console.log(await params);
   return (

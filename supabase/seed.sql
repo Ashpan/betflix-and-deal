@@ -1,3 +1,10 @@
+create schema if not exists public;
+grant usage on schema "public" to anon;
+grant usage on schema "public" to authenticated;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA "public" TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA "public" TO anon;
+
+
 -- Users table (extends Supabase auth.users)
 create table public.profiles (
     id uuid references auth.users(id) primary key,
@@ -74,10 +81,11 @@ group by p.id, p.display_name;
 alter table public.profiles enable row level security;
 alter table public.sessions enable row level security;
 alter table public.session_participants enable row level security;
+alter table public.session_participants replica identity full;
 alter table public.buy_ins enable row level security;
 alter table public.settlements enable row level security;
 
--- Example RLS policies (you'll need to adjust these based on your requirements)
+-- RLS policies
 create policy "Public profiles are visible to all"
     on public.profiles for select
     using (true);
@@ -94,16 +102,51 @@ create policy "Users can update their own profile"
     on public.profiles for update
     using (auth.uid() = id);
 
-create policy "Users can view sessions they're part of"
+create policy "Users can view sessions they're part of or by code"
     on public.sessions for select
     using (
+        -- User is a participant
         auth.uid() in (
             select user_id
             from public.session_participants
             where session_id = id
         )
+        OR
+        -- Session is pending and being looked up by code
+        (status = 'pending')
     );
 
+create policy "Can view session participants"
+    on public.session_participants for select
+    using (true);
+
+create policy "Users can join sessions"
+    on public.session_participants for insert
+    with check (
+        user_id = auth.uid()
+        AND
+        exists (
+            select 1
+            from public.sessions s
+            where s.id = session_id
+            and s.status = 'pending'
+        )
+    );
+
+create policy "Users can update own participation"
+    on public.session_participants for update
+    using (user_id = auth.uid());
+
+create policy "Users can delete own participation"
+    on public.session_participants for delete
+    using (user_id = auth.uid());
+
+-- Enable realtime
+alter
+  publication supabase_realtime add table public.session_participants;
+
+alter
+  publication supabase_realtime add table public.profiles;
 
 -- Function to handle user creation
 create function public.handle_new_user()
@@ -164,3 +207,100 @@ create trigger handle_session_participants_updated_at
     before update on public.session_participants
     for each row
     execute procedure public.handle_updated_at();
+
+-- Function to allow a user to join a session
+create or replace function join_session(p_session_code text)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+    v_session_id uuid;
+    v_session_buy_in decimal;
+    v_user_id uuid;
+    v_participant json;
+begin
+    -- Get the current user's ID
+    v_user_id := auth.uid();
+
+    -- Get the session ID
+    select id, buy_in_amount into v_session_id, v_session_buy_in
+    from public.sessions
+    where code = p_session_code and status = 'pending';
+
+    if v_session_id is null then
+        raise exception 'Session not found or not pending';
+    end if;
+
+    -- Check if user is already in session
+    if exists (
+        select 1
+        from public.session_participants
+        where session_id = v_session_id and user_id = v_user_id
+    ) then
+        raise exception 'User already in session';
+    end if;
+
+    -- Insert the participant
+    insert into public.session_participants (
+        session_id,
+        user_id,
+        initial_buy_in,
+        status
+    )
+    values (
+        v_session_id,
+        v_user_id,
+        v_session_buy_in,
+        'accepted'
+    )
+    returning json_build_object(
+        'session_id', session_id,
+        'user_id', user_id,
+        'initial_buy_in', initial_buy_in,
+        'status', status
+    ) into v_participant;
+
+    return v_participant;
+end;
+$$;
+
+
+-- Function to allow a user to leave a session
+create or replace function leave_session(p_session_code text)
+returns boolean
+language plpgsql
+security definer
+as $$
+declare
+    v_session_id uuid;
+    v_user_id uuid;
+begin
+    -- Get the current user's ID
+    v_user_id := auth.uid();
+
+    -- Get the session ID
+    select id into v_session_id
+    from public.sessions
+    where code = p_session_code and status = 'pending';
+
+    if v_session_id is null then
+        raise exception 'Session not found or not pending';
+    end if;
+
+    -- Check if user is not in session
+    if not exists (
+        select 1
+        from public.session_participants
+        where session_id = v_session_id and user_id = v_user_id
+    ) then
+        raise exception 'User not in session';
+    end if;
+
+    -- Delete the participant
+    delete from public.session_participants
+    where session_id = v_session_id and user_id = v_user_id;
+
+    return true;
+end;
+$$;

@@ -8,14 +8,18 @@ import ControlledTextInput from "@/components/form/ControlledTextInput";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { User } from "@supabase/supabase-js";
+import { joinSession } from "@/lib/supabase/queries";
+import { useToast } from "@/hooks/use-toast";
+import { redirect } from "next/navigation";
 
 const FormSchema = z.object({
-  sessionId: z.string().length(4, {
-    message: "Session ID must be 4 characters.",
+  sessionId: z.string().length(6, {
+    message: "Session ID must be 6 characters.",
   }),
 });
 
 export const JoinSessionForm = ({ user }: { user?: User }) => {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -24,9 +28,22 @@ export const JoinSessionForm = ({ user }: { user?: User }) => {
   });
   const { handleSubmit } = form;
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    console.log(data);
-    console.log(user);
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    const { data: res, error } = await joinSession(data.sessionId);
+    if (error) {
+      console.error(error);
+      return toast({
+        title: "Error",
+        description: "Unable to join session.",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Session joined successfully.",
+      });
+      form.reset();
+      redirect(`/session/${data.sessionId}/lobby`);
+    }
   };
 
   return (

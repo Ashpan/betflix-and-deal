@@ -117,3 +117,9 @@ export const leaveSession = async (sessionCode: string) => {
   });
   return { data, error };
 };
+
+export const getAllUsers = async () => {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("profiles").select("*");
+  return { data, error };
+};

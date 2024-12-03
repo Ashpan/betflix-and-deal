@@ -4,6 +4,7 @@ import SessionMembers from "./SessionMembers";
 import { createClient } from "@/utils/supabase/server";
 import { JoinSessionDialog } from "./JoinSessionDialog";
 import { LeaveSessionButton } from "./LeaveSessionButton";
+import { AddUserDropdown } from "./AddUserDropdown";
 
 const SessionLobby = async ({
   params,
@@ -28,6 +29,7 @@ const SessionLobby = async ({
       <h1>Session Lobby</h1>
       <SessionCard sessionCode={code} />
       <SessionMembers sessionCode={code} />
+      <AddUserDropdown />
       <LeaveSessionButton sessionCode={code} />
     </div>
   );

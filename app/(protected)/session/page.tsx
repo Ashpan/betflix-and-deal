@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { CreateSessionForm } from "./CreateSessionForm";
 import { JoinSessionForm } from "./JoinSessionForm";
+import { ActiveSessions } from "./ActiveSessions";
 
 export const metadata: Metadata = {
   title: "Sessions",
@@ -19,16 +20,23 @@ const SessionsPage = async () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col gap-6 px-4">
+    <>
       <Header title={metadata.title as string} />
-      <div>
-        <CreateSessionForm user={user} />
+      <div className="flex-1 flex flex-row gap-6 px-4">
+        <div className="basis-2/3">
+          <div className="pb-4">
+            <CreateSessionForm user={user} />
+          </div>
+          <Separator />
+          <div>
+            <JoinSessionForm user={user} />
+          </div>
+        </div>
+        <div className="basis-1/3">
+          <ActiveSessions userId={user.id} />
+        </div>
       </div>
-      <Separator />
-      <div className="basis-1/2">
-        <JoinSessionForm user={user} />
-      </div>
-    </div>
+    </>
   );
 };
 

@@ -275,6 +275,9 @@ as $$
 declare
     v_session_id uuid;
     v_user_id uuid;
+    v_is_owner boolean;
+    v_participant_count integer;
+    v_new_owner_id uuid;
 begin
     -- Get the current user's ID
     v_user_id := auth.uid();
@@ -288,6 +291,10 @@ begin
         raise exception 'Session not found or not pending';
     end if;
 
+    select (created_by = v_user_id) into v_is_owner
+    from public.sessions
+    where id = v_session_id;
+
     -- Check if user is not in session
     if not exists (
         select 1
@@ -295,6 +302,40 @@ begin
         where session_id = v_session_id and user_id = v_user_id
     ) then
         raise exception 'User not in session';
+    end if;
+
+    -- If user is owner, handle ownership transfer or cancel session
+    if v_is_owner then
+        select count(*) into v_participant_count
+        from public.session_participants
+        where session_id = v_session_id
+        and user_id != v_user_id;
+
+        if v_participant_count = 0 then
+            -- Cancel the session
+            update public.sessions
+            set status = 'cancelled'
+            where id = v_session_id;
+        else
+            -- Transfer ownership to another participant
+            select user_id into v_new_owner_id
+            from public.session_participants
+            where session_id = v_session_id
+            and user_id != v_user_id
+            and status = 'accepted'
+            order by created_at asc
+            limit 1;
+
+            if v_new_owner_id is not null then
+                update public.sessions
+                set created_by = v_new_owner_id
+                where id = v_session_id;
+            else
+                update public.sessions
+                set status = 'cancelled'
+                where id = v_session_id;
+            end if;
+        end if;
     end if;
 
     -- Delete the participant

@@ -37,7 +37,7 @@ const items = [
     authState: "unauthenticated",
   },
   {
-    title: "New Session",
+    title: "Sessions",
     url: "/session",
     icon: Calendar,
     authState: "authenticated",
@@ -68,7 +68,7 @@ const items = [
   },
 ];
 
-export async function AppSidebar() {
+export const AppSidebar = async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -109,4 +109,4 @@ export async function AppSidebar() {
       <ThemeSwitcher />
     </Sidebar>
   );
-}
+};

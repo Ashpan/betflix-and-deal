@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// import { Combobox } from "@/components/ui/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -16,26 +16,42 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { leaveSession } from "@/lib/supabase/queries";
-import { QrCode } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
+import { addMemberToSession, leaveSession } from "@/lib/supabase/queries";
+import { PlayCircle, QrCode } from "lucide-react";
 import { useQRCode } from "next-qrcode";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+interface IMember {
+  id: string;
+  username: string;
+  display_name: string | null;
+  email: string;
+  avatar_url: string | null;
+}
 
 interface LobbySessionCardProps {
   sessionName: string;
   sessionCode: string;
   buyInAmount: number;
+  allMembers: IMember[];
 }
 
 export const LobbySessionCard = ({
   sessionName,
   sessionCode,
   buyInAmount,
+  allMembers,
 }: LobbySessionCardProps) => {
   const router = useRouter();
   const { SVG } = useQRCode();
+  const { toast } = useToast();
+  const { profile } = useProfile();
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
+
+  const userId = profile ? profile.id : "";
 
   const leaveSessionHandler = () => {
     leaveSession(sessionCode);
@@ -80,20 +96,44 @@ export const LobbySessionCard = ({
           <span className="text-xl font-bold">${buyInAmount.toFixed(2)}</span>
         </div>
 
-        {/* <Combobox
-        items={availableUsers.map(user => ({ label: user.name, value: user.id.toString() }))}
-        placeholder="Add member to session..."
-        onSelect={() => {}}
-      /> */}
+        <Combobox
+          items={allMembers
+            .filter((member) => member.id !== userId)
+            .map((member) => ({
+              label: member.display_name || member.email,
+              value: member.id,
+            }))}
+          placeholder="Add member to session..."
+          onSelect={async (value) => {
+            const { error } = await addMemberToSession(value, sessionCode);
+            if (error) {
+              console.error(error);
+              toast({
+                title: "Error Adding Member",
+                description: error.message,
+              });
+            } else {
+              toast({
+                title: "Member Added",
+              });
+            }
+          }}
+        />
       </CardContent>
       <CardFooter>
-        <Button
-          variant="destructive"
-          className="w-full"
-          onClick={leaveSessionHandler}
-        >
-          Leave Session
-        </Button>
+        <>
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={leaveSessionHandler}
+          >
+            Leave Session
+          </Button>
+          <Button variant="default" className="w-full">
+            <PlayCircle className="mr-2 h-4 w-4" />
+            Start Session
+          </Button>
+        </>
       </CardFooter>
     </Card>
   );

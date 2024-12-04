@@ -1,5 +1,6 @@
 import { LobbySessionCard } from "@/app/components/LobbySessionCard";
 import {
+  getAllMembers,
   getSessionDetails,
   getSessionMembers,
   isUserInSession,
@@ -18,6 +19,7 @@ const PokerSessionPage = async ({
     await getSessionDetails(code);
   const { data: sessionMembers, error: memberError } =
     await getSessionMembers(code);
+  const { data: allMembers, error: allMembersError } = await getAllMembers();
 
   const supabase = await createClient();
   const {
@@ -36,6 +38,7 @@ const PokerSessionPage = async ({
           sessionName={sessionDetails.name}
           sessionCode={sessionDetails.code}
           buyInAmount={sessionDetails.buy_in_amount}
+          allMembers={allMembers || []}
         />
         <LobbyMembersCard initialMembers={sessionMembers} sessionCode={code} />
         <LobbyJoinDialog sessionCode={code} userInSession={userInSession} />

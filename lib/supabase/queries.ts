@@ -109,3 +109,35 @@ export const getSessionDetails = async (sessionCode: string) => {
     .single();
   return { data, error };
 };
+
+export const getAllMembers = async () => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, email, avatar_url");
+  return { data, error };
+};
+
+export const addMemberToSession = async (
+  userId: string,
+  sessionCode: string,
+) => {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("add_member_to_session", {
+    p_session_code: sessionCode,
+    p_user_id: userId,
+  });
+  return { data, error };
+};
+
+export const kickMemberFromSession = async (
+  userId: string,
+  sessionCode: string,
+) => {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("delete_member_from_session", {
+    p_session_code: sessionCode,
+    p_user_id: userId,
+  });
+  return { data, error };
+};

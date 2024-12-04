@@ -1,13 +1,18 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
-import { getSessionMember } from "@/lib/supabase/queries";
+import {
+  getSessionMember,
+  kickMemberFromSession,
+} from "@/lib/supabase/queries";
 import { Tables } from "@/lib/types/database.types";
 import { createClient } from "@/utils/supabase/client";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import { Crown, UserCircle } from "lucide-react";
+import { Crown, UserCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface SessionMember {
@@ -35,7 +40,23 @@ export const LobbyMembersCard = ({
   const [members, setMembers] = useState<SessionMember[]>(initialMembers);
 
   const { profile } = useProfile();
+  const { toast } = useToast();
   const currentUserId = profile ? profile.id : "";
+  const currentUserIsOwner = members.find(
+    (member) => member.id === currentUserId,
+  )?.is_owner;
+
+  const kickMember = async (userId: string) => {
+    console.log("kicking");
+    const { error } = await kickMemberFromSession(userId, sessionCode);
+    if (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to kick member",
+      });
+    }
+  };
 
   useEffect(() => {
     const handleRealtime = async (
@@ -54,7 +75,6 @@ export const LobbyMembersCard = ({
           if (!data) {
             break;
           }
-          console.log(data);
           setMembers((prev) => [...prev, data]);
           break;
         }
@@ -94,7 +114,7 @@ export const LobbyMembersCard = ({
               >
                 <div className="flex items-center">
                   <UserCircle className="mr-2 h-5 w-5" />
-                  <span>{member.username}</span>
+                  <span>{member.display_name || member.username}</span>
                   {member.id === currentUserId && (
                     <span className="ml-2 text-xs text-muted-foreground">
                       (You)
@@ -106,6 +126,16 @@ export const LobbyMembersCard = ({
                     className="h-5 w-5 text-yellow-500"
                     aria-label="Session Owner"
                   />
+                )}
+                {currentUserIsOwner && member.id !== currentUserId && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => kickMember(member.id)}
+                    aria-label={`Kick ${member.display_name || member.username}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 )}
               </li>
             ))}

@@ -426,3 +426,74 @@ begin
     return v_member;
 end;
 $$;
+
+create or replace function add_member_to_session(p_session_code text, p_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+as $$
+declare
+    v_session_id uuid;
+    v_session_buy_in decimal;
+    v_participant json;
+begin
+    -- Get the session ID
+    select id, buy_in_amount into v_session_id, v_session_buy_in
+    from public.sessions
+    where code = p_session_code and status = 'pending';
+
+    if v_session_id is null then
+        raise exception 'Session not found or not in lobby';
+    end if;
+
+    -- Check if user is already in session
+    if exists (
+        select 1
+        from public.session_participants
+        where session_id = v_session_id and user_id = p_user_id
+    ) then
+        raise exception 'User already in session';
+    end if;
+
+    -- Insert the participant
+    insert into public.session_participants (
+        session_id,
+        user_id,
+        initial_buy_in,
+        status
+    )
+    values (
+        v_session_id,
+        p_user_id,
+        v_session_buy_in,
+        'accepted'
+    );
+
+    return true;
+end;
+$$;
+
+create or replace function delete_member_from_session(p_session_code text, p_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+as $$
+declare
+    v_session_id uuid;
+begin
+    -- Get the session ID
+    select id into v_session_id
+    from public.sessions
+    where code = p_session_code and status = 'pending';
+
+    if v_session_id is null then
+        raise exception 'Session not found or not in lobby';
+    end if;
+
+    -- DELETE the participant
+    delete from public.session_participants
+    where session_id = v_session_id AND user_id = p_user_id;
+
+    return true;
+end;
+$$;

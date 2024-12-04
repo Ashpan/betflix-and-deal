@@ -1,5 +1,3 @@
-import { Header } from "@/components/Header";
-import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
 import { CreateSessionForm } from "@/app/components/CreateSessionForm";
@@ -21,18 +19,11 @@ const SessionsPage = async () => {
 
   return (
     <>
-      <Header title={metadata.title as string} />
-      <div className="flex-1 flex flex-row gap-6 px-4">
-        <div className="basis-2/3">
-          <div className="pb-4">
-            <CreateSessionForm user={user} />
-          </div>
-          <Separator />
-          <div>
-            <JoinSessionForm user={user} />
-          </div>
-        </div>
-        <div className="basis-1/3">
+      <div className="container mx-auto py-8">
+        <h1 className="text-4xl font-bold mb-8">{metadata.title as string}</h1>
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <CreateSessionForm user={user} />
+          <JoinSessionForm user={user} />
           <ActiveSessions userId={user.id} />
         </div>
       </div>

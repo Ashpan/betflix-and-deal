@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tables } from "@/lib/types/database.types";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
@@ -16,21 +17,39 @@ export const ActiveSessions = async ({ userId }: { userId: string }) => {
   const sessions: Tables<"sessions">[] = error || !data ? [] : data;
 
   return (
-    <div>
-      <h1>Your Active Sessions</h1>
-      <div>
-        {sessions.map((session) => (
-          <div key={session.id} className="container flex px-4">
-            <p className="basis-*">{session.name}</p>
-            <Link
-              className="basis-* px-5"
-              href={`/session/${session.code}/lobby`}
-            >
-              <Button>Join Session</Button>
-            </Link>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Your Active Sessions</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {sessions.length > 0 ? (
+          <ul className="space-y-4">
+            {sessions.map((session) => (
+              <li
+                key={session.id}
+                className="flex items-center justify-between p-4 bg-secondary rounded-lg"
+              >
+                <div>
+                  <h3 className="font-semibold">{session.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Buy-in: ${session.buyIn}
+                  </p>
+                </div>
+                <Link
+                  className="basis-* px-5"
+                  href={`/session/${session.code}/lobby`}
+                >
+                  <Button>Join</Button>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-center text-muted-foreground">
+            No active sessions
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };

@@ -3,6 +3,7 @@
 import ControlledNumberInput from "@/components/form/ControlledNumberInput";
 import ControlledTextInput from "@/components/form/ControlledTextInput";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { createSession } from "@/lib/supabase/queries";
@@ -59,22 +60,29 @@ export const CreateSessionForm = ({ user }: { user: User }) => {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="w-2/3 space-y-6">
-        <ControlledTextInput
-          form={form}
-          name="name"
-          label="Name of Session"
-          description="This is the name of the session that will be displayed to other players."
-        />
-        <ControlledNumberInput
-          form={form}
-          name="buyIn"
-          label="Amount for initial Buy-In"
-          description="This is the amount of money that each player will need to pay to join the session."
-        />
-        <Button type="submit">Create Session</Button>
-      </form>
-    </Form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Create a New Session</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+            <ControlledTextInput
+              form={form}
+              name="name"
+              label="Name of Session"
+              description="This is the name of the session that will be displayed to other players."
+            />
+            <ControlledNumberInput
+              form={form}
+              name="buyIn"
+              label="Buy-in Amount"
+              description="This is the amount of money that each player will need to pay to join the session."
+            />
+            <Button type="submit">Create Session</Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };

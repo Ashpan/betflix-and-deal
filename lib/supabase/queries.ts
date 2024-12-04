@@ -1,9 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
-import {
-  ICreateSessionPayload,
-  IUser,
-  ISessionParticipantProfile,
-} from "../types/types";
+import { ICreateSessionPayload, IUser } from "../types/types";
 
 export const createSession = async (payload: ICreateSessionPayload) => {
   const supabase = createClient();
@@ -11,35 +7,21 @@ export const createSession = async (payload: ICreateSessionPayload) => {
   return { data, error };
 };
 
-export const getMembers = async (lobbyCode: string) => {
+export const getSessionMembers = async (lobbyCode: string) => {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("sessions")
-    .select(
-      `
-      id,
-      session_participants (
-      id,
-      profiles (
-        id,
-        avatar_url,
-        email,
-        username,
-        display_name
-        )
-      )`,
-    )
-    .eq("code", lobbyCode)
-    .single();
+  const { data, error } = await supabase.rpc("get_session_participants", {
+    p_session_code: lobbyCode,
+  });
+  return { data, error };
+};
 
-  const transformedData = (
-    data
-      ? data.session_participants.map((member: ISessionParticipantProfile) => {
-          return { ...member.profiles, sp_id: member.id };
-        })
-      : null
-  ) as IUser[] | null;
-  return { data: transformedData, error };
+export const getSessionMember = async (userId: string, sessionCode: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_session_member", {
+    p_user_id: userId,
+    p_session_code: sessionCode,
+  });
+  return { data, error };
 };
 
 export const getMember = async (userId: string, sessionCode: string) => {
@@ -115,5 +97,15 @@ export const leaveSession = async (sessionCode: string) => {
   const { data, error } = await supabase.rpc("leave_session", {
     p_session_code: sessionCode,
   });
+  return { data, error };
+};
+
+export const getSessionDetails = async (sessionCode: string) => {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("code", sessionCode)
+    .single();
   return { data, error };
 };

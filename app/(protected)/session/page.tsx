@@ -2,9 +2,9 @@ import { Header } from "@/components/Header";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/utils/supabase/server";
 import { Metadata } from "next";
-import { CreateSessionForm } from "./CreateSessionForm";
-import { JoinSessionForm } from "./JoinSessionForm";
-import { ActiveSessions } from "./ActiveSessions";
+import { CreateSessionForm } from "@/app/components/CreateSessionForm";
+import { JoinSessionForm } from "@/app/components/JoinSessionForm";
+import { ActiveSessions } from "@/app/components/ActiveSessions";
 
 export const metadata: Metadata = {
   title: "Sessions",

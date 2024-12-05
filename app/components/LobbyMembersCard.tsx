@@ -47,13 +47,17 @@ export const LobbyMembersCard = ({
   )?.is_owner;
 
   const kickMember = async (userId: string) => {
-    console.log("kicking");
     const { error } = await kickMemberFromSession(userId, sessionCode);
     if (error) {
       console.error(error);
       toast({
         title: "Error",
         description: "Failed to kick member",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Member kicked successfully",
       });
     }
   };

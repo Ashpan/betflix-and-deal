@@ -11,6 +11,7 @@ import { User } from "@supabase/supabase-js";
 import { joinSession } from "@/lib/supabase/queries";
 import { useToast } from "@/hooks/use-toast";
 import { redirect } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const FormSchema = z.object({
   sessionId: z.string().length(6, {
@@ -47,16 +48,23 @@ export const JoinSessionForm = ({ user }: { user?: User }) => {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="w-2/3 space-y-6">
-        <ControlledTextInput
-          form={form}
-          name="sessionId"
-          label="Session ID"
-          description="This is the unique identifier for the session you want to join."
-        />
-        <Button type="submit">Join Session</Button>
-      </form>
-    </Form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Join a Session</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+            <ControlledTextInput
+              form={form}
+              name="sessionId"
+              label="Session ID"
+              description="This is the unique identifier for the session you want to join."
+            />
+            <Button type="submit">Join Session</Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };

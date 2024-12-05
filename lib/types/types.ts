@@ -14,7 +14,8 @@ export interface IProfile {
 }
 
 export interface IUser extends IProfile {
-  sp_id: string;
+  spId: string;
+  isOwner: boolean;
 }
 
 export interface ISessionParticipantProfile {

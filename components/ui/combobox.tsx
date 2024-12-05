@@ -1,9 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export interface ComboboxItem {
   value: string;
@@ -37,6 +37,17 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
+  const [filteredItems, setFilteredItems] = React.useState(items);
+
+  const handleSearch = React.useCallback(
+    (search: string) => {
+      const filtered = items.filter((item) =>
+        item.label.toLowerCase().includes(search.toLowerCase()),
+      );
+      setFilteredItems(filtered);
+    },
+    [items],
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -54,12 +65,15 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder={placeholder} />
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder={placeholder}
+            onValueChange={handleSearch}
+          />
           <CommandList>
             <CommandEmpty>No item found.</CommandEmpty>
             <CommandGroup>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <CommandItem
                   key={item.value}
                   value={item.value}

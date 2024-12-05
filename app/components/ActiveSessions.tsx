@@ -46,7 +46,6 @@ export const ActiveSessions = async ({ userId }: ActiveSessionsProps) => {
                   <p className="text-sm text-muted-foreground">
                     Buy-in: ${session.session_participants[0].initial_buy_in}
                   </p>
-                  <p className="text-sm text-muted-foreground">Code: </p>
                   <p className="text-sm text-muted-foreground font-bold">
                     {session.code}
                   </p>

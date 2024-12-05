@@ -22,7 +22,7 @@ import { addMemberToSession, leaveSession } from "@/lib/supabase/queries";
 import { PlayCircle, QrCode } from "lucide-react";
 import { useQRCode } from "next-qrcode";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface IMember {
   id: string;
@@ -50,6 +50,11 @@ export const LobbySessionCard = ({
   const { toast } = useToast();
   const { profile } = useProfile();
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
+  const [qrCodeUrl, setQRCodeUrl] = useState("");
+
+  useEffect(() => {
+    setQRCodeUrl(window.location.toString());
+  }, []);
 
   const userId = profile ? profile.id : "";
 
@@ -64,7 +69,7 @@ export const LobbySessionCard = ({
         <CardTitle className="text-2xl font-bold text-center">
           {sessionName}
         </CardTitle>
-        <div className="text-center text-muted-foreground">
+        <div className="text-center text-muted-foreground text-lg">
           Session Code:{" "}
           <span className="font-mono font-bold">{sessionCode}</span>
         </div>
@@ -81,7 +86,7 @@ export const LobbySessionCard = ({
             </DialogHeader>
             <div className="flex items-center justify-center p-6">
               <SVG
-                text={window.location.toString()}
+                text={qrCodeUrl}
                 options={{
                   width: 256,
                 }}
@@ -121,7 +126,7 @@ export const LobbySessionCard = ({
         />
       </CardContent>
       <CardFooter>
-        <>
+        <div className="grid grid-cols-2 gap-4 w-full mx-auto">
           <Button
             variant="destructive"
             className="w-full"
@@ -133,7 +138,7 @@ export const LobbySessionCard = ({
             <PlayCircle className="mr-2 h-4 w-4" />
             Start Session
           </Button>
-        </>
+        </div>
       </CardFooter>
     </Card>
   );

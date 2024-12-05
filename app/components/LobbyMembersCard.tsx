@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -132,14 +131,11 @@ export const LobbyMembersCard = ({
                   />
                 )}
                 {currentUserIsOwner && member.id !== currentUserId && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={async () => kickMember(member.id)}
+                  <X
+                    className="h-5 w-5 hover:text-red-500"
                     aria-label={`Kick ${member.display_name || member.username}`}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                    onClick={async () => kickMember(member.id)}
+                  />
                 )}
               </li>
             ))}

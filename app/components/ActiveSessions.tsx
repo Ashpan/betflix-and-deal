@@ -1,20 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tables } from "@/lib/types/database.types";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 
-export const ActiveSessions = async ({ userId }: { userId: string }) => {
+interface ActiveSessionsProps {
+  userId: string;
+}
+
+interface ISession {
+  id: string;
+  name: string;
+  code: string;
+  session_participants: {
+    initial_buy_in: number;
+  }[];
+}
+
+export const ActiveSessions = async ({ userId }: ActiveSessionsProps) => {
   console.log(userId);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("sessions")
-    .select("*, session_participants!inner()")
+    .select("id, name, code, session_participants!inner(initial_buy_in)")
     .neq("status", "completed")
     .neq("status", "cancelled")
     .eq("session_participants.user_id", userId);
 
-  const sessions: Tables<"sessions">[] = error || !data ? [] : data;
+  const sessions: ISession[] = error || !data ? [] : data;
 
   return (
     <Card>
@@ -32,7 +44,7 @@ export const ActiveSessions = async ({ userId }: { userId: string }) => {
                 <div>
                   <h3 className="font-semibold">{session.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Buy-in: ${session.buyIn}
+                    Buy-in: ${session.session_participants[0].initial_buy_in}
                   </p>
                 </div>
                 <Link

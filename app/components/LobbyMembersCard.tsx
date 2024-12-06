@@ -110,7 +110,11 @@ export const LobbyMembersCard = ({
       <CardContent>
         <ScrollArea className="h-[calc(100vh-20rem)] border rounded-md p-2">
           <ul className="space-y-2">
-            {members.map((member) => (
+            {members
+            .sort(member => {
+              return member.is_owner ? -1 : 1;
+            })
+            .map((member) => (
               <li
                 key={member.sp_id}
                 className="flex items-center justify-between p-2 hover:bg-muted rounded-md"

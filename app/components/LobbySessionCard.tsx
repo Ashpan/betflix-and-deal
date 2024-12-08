@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -18,11 +17,13 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
-import { addMemberToSession, leaveSession } from "@/lib/supabase/queries";
+import { leaveSession } from "@/lib/supabase/queries";
 import { PlayCircle, QrCode } from "lucide-react";
 import { useQRCode } from "next-qrcode";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AddMemberCombobox } from "./AddMemberCombobox";
+import Link from "next/link";
 
 interface IMember {
   id: string;
@@ -36,7 +37,7 @@ interface LobbySessionCardProps {
   sessionName: string;
   sessionCode: string;
   buyInAmount: number;
-  allMembers: IMember[];
+  allMembers: IMember[] | null;
 }
 
 export const LobbySessionCard = ({
@@ -101,29 +102,7 @@ export const LobbySessionCard = ({
           <span className="text-xl font-bold">${buyInAmount.toFixed(2)}</span>
         </div>
 
-        <Combobox
-          items={allMembers
-            .filter((member) => member.id !== userId)
-            .map((member) => ({
-              label: member.display_name || member.email,
-              value: member.id,
-            }))}
-          placeholder="Add member to session..."
-          onSelect={async (value) => {
-            const { error } = await addMemberToSession(value, sessionCode);
-            if (error) {
-              console.error(error);
-              toast({
-                title: "Error Adding Member",
-                description: error.message,
-              });
-            } else {
-              toast({
-                title: "Member Added",
-              });
-            }
-          }}
-        />
+        <AddMemberCombobox members={allMembers} sessionCode={sessionCode} />
       </CardContent>
       <CardFooter>
         <div className="grid grid-cols-2 gap-4 w-full mx-auto">
@@ -134,10 +113,12 @@ export const LobbySessionCard = ({
           >
             Leave Session
           </Button>
-          <Button variant="default" className="w-full">
-            <PlayCircle className="mr-2 h-4 w-4" />
-            Start Session
-          </Button>
+          <Link href={`/session/${sessionCode}/game`}>
+            <Button variant="default" className="w-full">
+              <PlayCircle className="mr-2 h-4 w-4" />
+              Start Session
+            </Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

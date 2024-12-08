@@ -48,6 +48,7 @@ export const CreateSessionForm = ({ user }: { user: User }) => {
       return toast({
         title: "Error",
         description: "There was an error creating the session.",
+        variant: "destructive",
       });
     } else {
       toast({

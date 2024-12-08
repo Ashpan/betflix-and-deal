@@ -22,7 +22,7 @@ interface SessionMember {
   display_name: string | null;
   email: string;
   avatar_url: string | null;
-  initial_buy_in: number;
+  buy_ins: number;
   final_stack: number;
   status: string;
   is_owner: boolean;
@@ -53,6 +53,7 @@ export const LobbyMembersCard = ({
       toast({
         title: "Error",
         description: "Failed to kick member",
+        variant: "destructive",
       });
     } else {
       toast({

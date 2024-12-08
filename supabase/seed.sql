@@ -34,21 +34,12 @@ create table public.session_participants (
     id uuid primary key default gen_random_uuid(),
     session_id uuid references public.sessions(id) not null,
     user_id uuid references public.profiles(id) not null,
-    initial_buy_in decimal not null,
+    buy_ins decimal not null,
     final_stack decimal,
     status text check (status in ('invited', 'accepted', 'declined', 'completed')) default 'invited',
     created_at timestamp with time zone default now(),
     updated_at timestamp with time zone default now(),
     unique(session_id, user_id)
-);
-
--- Buy-ins tracking (for rebuys during session)
-create table public.buy_ins (
-    id uuid primary key default gen_random_uuid(),
-    session_id uuid references public.sessions(id) not null,
-    user_id uuid references public.profiles(id) not null,
-    amount decimal not null,
-    created_at timestamp with time zone default now()
 );
 
 -- Settlements table (for tracking who owes who)
@@ -70,8 +61,8 @@ select
     p.id as user_id,
     p.display_name,
     count(distinct sp.session_id) as total_sessions,
-    sum(sp.final_stack - sp.initial_buy_in) as net_profit,
-    avg(sp.final_stack - sp.initial_buy_in) as avg_profit_per_session
+    sum(sp.final_stack - sp.buy_ins) as net_profit,
+    avg(sp.final_stack - sp.buy_ins) as avg_profit_per_session
 from profiles p
 left join session_participants sp on p.id = sp.user_id
 where sp.status = 'completed'
@@ -88,44 +79,50 @@ alter table public.profiles enable row level security;
 alter table public.sessions enable row level security;
 alter table public.session_participants enable row level security;
 alter table public.session_participants replica identity full;
-alter table public.buy_ins enable row level security;
 alter table public.settlements enable row level security;
 
 -- RLS policies
+
+-- Policy to allow public profiles to be visible to all
 create policy "Public profiles are visible to all"
     on public.profiles for select
     using (true);
 
+-- Policy to allow users to insert their own profile
 create policy "Users can insert their own profile"
     on public.profiles for insert
     with check (auth.uid() = id);
 
+-- Policy to allow users to create new sessions
 create policy "Users can create new sessions"
     on public.sessions for insert
     with check (auth.uid() = created_by);
 
+-- Policy to allow users to update their own profile
 create policy "Users can update their own profile"
     on public.profiles for update
     using (auth.uid() = id);
 
+-- Policy to allow users to view sessions they're part of or pending sessions
 create policy "Users can view sessions they're part of or by code"
     on public.sessions for select
     using (
-        -- User is a participant
-        auth.uid() in (
-            select user_id
-            from public.session_participants
-            where session_id = id
-        )
-        OR
-        -- Session is pending and being looked up by code
-        (status = 'pending')
+        ((auth.uid() IN ( SELECT session_participants.user_id
+        FROM session_participants
+        WHERE (session_participants.session_id = sessions.id))) OR (status = 'pending'::text))
     );
 
+-- Policy for session owners to update their own sessions
+create policy "Session owners can update their own sessions"
+    on public.sessions for update
+    using (auth.uid() = created_by);
+
+-- Policy to allow users to view session participants
 create policy "Can view session participants"
     on public.session_participants for select
     using (true);
 
+-- Policy to allow users to join pending sessions
 create policy "Users can join sessions"
     on public.session_participants for insert
     with check (
@@ -139,10 +136,23 @@ create policy "Users can join sessions"
         )
     );
 
+-- Policy to allow users to update their own participation
 create policy "Users can update own participation"
     on public.session_participants for update
     using (user_id = auth.uid());
 
+-- Policy to allow session owners to update session participants
+create policy "Session owners can update participants"
+    on public.session_participants for update
+    using (
+        auth.uid() in (
+            select created_by
+            from public.sessions
+            where id = session_id
+        )
+    );
+
+-- Policy to allow users to leave a session
 create policy "Users can delete own participation"
     on public.session_participants for delete
     using (user_id = auth.uid());
@@ -169,7 +179,7 @@ alter
   publication supabase_realtime add table public.profiles;
 
 -- Function to handle user creation
-create function public.handle_new_user()
+create or replace function public.handle_new_user()
 returns trigger as $$
 begin
     insert into public.profiles (id, username, email)
@@ -183,16 +193,16 @@ end;
 $$ language plpgsql security definer;
 
 -- Trigger to handle user creation
-create trigger on_auth_user_created
+create or replace trigger on_auth_user_created
     after insert on auth.users
     for each row execute procedure public.handle_new_user();
 
 
 -- Function to add session created_by to session_participants
-create function public.handle_new_session()
+create or replace function public.handle_new_session()
 returns trigger as $$
 begin
-    insert into public.session_participants (session_id, user_id, initial_buy_in, status)
+    insert into public.session_participants (session_id, user_id, buy_ins, status)
     values (
         new.id,
         new.created_by,
@@ -204,13 +214,13 @@ end;
 $$ language plpgsql security definer;
 
 -- Trigger to add session created_by to session_participants
-create trigger on_session_created
+create or replace trigger on_session_created
     after insert on public.sessions
     for each row execute procedure public.handle_new_session();
 
 
 -- Triggers for updating timestamps
-create function public.handle_updated_at()
+create or replace function public.handle_updated_at()
 returns trigger as $$
 begin
     new.updated_at = now();
@@ -218,12 +228,12 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger handle_profiles_updated_at
+create or replace trigger handle_profiles_updated_at
     before update on public.profiles
     for each row
     execute procedure public.handle_updated_at();
 
-create trigger handle_session_participants_updated_at
+create or replace trigger handle_session_participants_updated_at
     before update on public.session_participants
     for each row
     execute procedure public.handle_updated_at();
@@ -265,7 +275,7 @@ begin
     insert into public.session_participants (
         session_id,
         user_id,
-        initial_buy_in,
+        buy_ins,
         status
     )
     values (
@@ -277,14 +287,13 @@ begin
     returning json_build_object(
         'session_id', session_id,
         'user_id', user_id,
-        'initial_buy_in', initial_buy_in,
+        'buy_ins', buy_ins,
         'status', status
     ) into v_participant;
 
     return v_participant;
 end;
 $$;
-
 
 -- Function to allow a user to leave a session
 create or replace function leave_session(p_session_code text)
@@ -392,7 +401,7 @@ begin
         'display_name', p.display_name,
         'email', p.email,
         'avatar_url', p.avatar_url,
-        'initial_buy_in', sp.initial_buy_in,
+        'buy_ins', sp.buy_ins,
         'final_stack', sp.final_stack,
         'status', sp.status,
         'is_owner', sp.user_id = s.created_by
@@ -433,7 +442,7 @@ begin
         'display_name', p.display_name,
         'email', p.email,
         'avatar_url', p.avatar_url,
-        'initial_buy_in', sp.initial_buy_in,
+        'buy_ins', sp.buy_ins,
         'final_stack', sp.final_stack,
         'status', sp.status,
         'is_owner', sp.user_id = s.created_by
@@ -460,7 +469,7 @@ begin
     -- Get the session ID
     select id, buy_in_amount into v_session_id, v_session_buy_in
     from public.sessions
-    where code = p_session_code and status = 'pending';
+    where code = p_session_code and (status = 'pending' or status = 'active');
 
     if v_session_id is null then
         raise exception 'Session not found or not in lobby';
@@ -479,7 +488,7 @@ begin
     insert into public.session_participants (
         session_id,
         user_id,
-        initial_buy_in,
+        buy_ins,
         status
     )
     values (

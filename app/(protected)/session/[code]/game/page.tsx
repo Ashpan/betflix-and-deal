@@ -13,6 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { AddMemberCombobox } from "@/app/components/AddMemberCombobox";
 
 export default function PokerSessionPage() {
   const [session, setSession] = useState<PokerSession>({
@@ -83,12 +84,13 @@ export default function PokerSessionPage() {
             <AccordionItem value="player-management">
               <AccordionTrigger>Player Management</AccordionTrigger>
               <AccordionContent>
-                <PlayerManagement
+                {/* <PlayerManagement
                   players={session.players}
                   onAddPlayer={addPlayer}
                   onAddBuyIn={addBuyIn}
                   onCashOut={cashOutPlayer}
-                />
+                /> */}
+                <AddMemberCombobox members={[]} sessionCode="AAAAA" />
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="session-status">

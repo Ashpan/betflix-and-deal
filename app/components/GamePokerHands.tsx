@@ -75,10 +75,10 @@ export default function PokerHands() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {pokerHands.map((hand) => (
           <Card key={hand.name} className="overflow-hidden">
-            <CardHeader className="bg-primary text-primary-foreground">
+            <CardHeader className="bg-primary text-primary-foreground p-4">
               <CardTitle>{hand.name}</CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <p className="text-sm mb-2">{hand.description}</p>
               <div className="flex flex-wrap justify-center">
                 {hand.example.map((card, index) => (

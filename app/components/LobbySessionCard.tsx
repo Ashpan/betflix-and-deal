@@ -23,6 +23,7 @@ import { PlayCircle, QrCode } from "lucide-react";
 import { useQRCode } from "next-qrcode";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AddMemberCombobox } from "./AddMemberCombobox";
 
 interface IMember {
   id: string;
@@ -101,29 +102,7 @@ export const LobbySessionCard = ({
           <span className="text-xl font-bold">${buyInAmount.toFixed(2)}</span>
         </div>
 
-        <Combobox
-          items={allMembers
-            .filter((member) => member.id !== userId)
-            .map((member) => ({
-              label: member.display_name || member.email,
-              value: member.id,
-            }))}
-          placeholder="Add member to session..."
-          onSelect={async (value) => {
-            const { error } = await addMemberToSession(value, sessionCode);
-            if (error) {
-              console.error(error);
-              toast({
-                title: "Error Adding Member",
-                description: error.message,
-              });
-            } else {
-              toast({
-                title: "Member Added",
-              });
-            }
-          }}
-        />
+        <AddMemberCombobox members={allMembers} sessionCode={sessionCode} />
       </CardContent>
       <CardFooter>
         <div className="grid grid-cols-2 gap-4 w-full mx-auto">

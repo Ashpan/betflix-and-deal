@@ -77,6 +77,12 @@ left join session_participants sp on p.id = sp.user_id
 where sp.status = 'completed'
 group by p.id, p.display_name;
 
+-- Create buckets
+insert into storage.buckets
+  (id, name, public)
+values
+  ('avatars', 'avatars', true);
+
 -- RLS Policies
 alter table public.profiles enable row level security;
 alter table public.sessions enable row level security;
@@ -140,6 +146,20 @@ create policy "Users can update own participation"
 create policy "Users can delete own participation"
     on public.session_participants for delete
     using (user_id = auth.uid());
+
+create policy "Authenicated user can upload avatar"
+on storage.objects for insert to authenticated with check (
+    bucket_id = 'avatars'
+);
+
+create policy "User can update their own avatar"
+    on storage.objects for update to authenticated
+    using ( (select auth.uid()) = owner_id::uuid );
+
+create policy "Anyone can access avatars"
+  on storage.objects for select to authenticated
+  using ( bucket_id = 'avatars' );
+
 
 -- Enable realtime
 alter

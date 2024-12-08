@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -111,38 +112,46 @@ export const LobbyMembersCard = ({
         <ScrollArea className="h-[calc(100vh-20rem)] border rounded-md p-2">
           <ul className="space-y-2">
             {members
-            .sort(member => {
-              return member.is_owner ? -1 : 1;
-            })
-            .map((member) => (
-              <li
-                key={member.sp_id}
-                className="flex items-center justify-between p-2 hover:bg-muted rounded-md"
-              >
-                <div className="flex items-center">
-                  <UserCircle className="mr-2 h-5 w-5" />
-                  <span>{member.display_name || member.username}</span>
-                  {member.id === currentUserId && (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      (You)
-                    </span>
+              .sort((member) => {
+                return member.is_owner ? -1 : 1;
+              })
+              .map((member) => (
+                <li
+                  key={member.sp_id}
+                  className="flex items-center justify-between p-2 hover:bg-muted rounded-md"
+                >
+                  <div className="flex items-center">
+                    <Avatar className="h-8 w-8 mr-2">
+                      <AvatarImage
+                        src={member.avatar_url || undefined}
+                        alt={member.display_name || member.username}
+                      />
+                      <AvatarFallback>
+                        <UserCircle className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{member.display_name || member.username}</span>
+                    {member.id === currentUserId && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        (You)
+                      </span>
+                    )}
+                  </div>
+                  {member.is_owner && (
+                    <Crown
+                      className="h-5 w-5 text-yellow-500"
+                      aria-label="Session Owner"
+                    />
                   )}
-                </div>
-                {member.is_owner && (
-                  <Crown
-                    className="h-5 w-5 text-yellow-500"
-                    aria-label="Session Owner"
-                  />
-                )}
-                {currentUserIsOwner && member.id !== currentUserId && (
-                  <X
-                    className="h-5 w-5 hover:text-red-500"
-                    aria-label={`Kick ${member.display_name || member.username}`}
-                    onClick={async () => kickMember(member.id)}
-                  />
-                )}
-              </li>
-            ))}
+                  {currentUserIsOwner && member.id !== currentUserId && (
+                    <X
+                      className="h-5 w-5 hover:text-red-500"
+                      aria-label={`Kick ${member.display_name || member.username}`}
+                      onClick={async () => kickMember(member.id)}
+                    />
+                  )}
+                </li>
+              ))}
           </ul>
         </ScrollArea>
       </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Header } from "@/components/Header";
+import { ProfileSettingsForm } from "@/app/components/ProfileSettingsForm";
 import { useProfile } from "@/hooks/useProfile";
 
 const ProtectedPage = () => {
@@ -8,11 +8,9 @@ const ProtectedPage = () => {
 
   return (
     <>
-      <Header title="Profile" />
-      <div className="flex-1 w-full flex flex-col gap-12">
-        <pre className="text-xs font-mono p-3 rounded border max-h-64 overflow-auto">
-          {JSON.stringify(profile, null, 2)}
-        </pre>
+      <div className="container mx-auto py-10">
+        <h1 className="text-2xl font-bold mb-5">Profile Settings</h1>
+        <ProfileSettingsForm />
       </div>
     </>
   );

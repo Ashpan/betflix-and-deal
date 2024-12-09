@@ -28,7 +28,13 @@ const items = [
     title: "Home",
     url: "/",
     icon: Home,
-    authState: "both",
+    authState: "unauthenticated",
+  },
+  {
+    title: "Home",
+    url: "/home",
+    icon: Home,
+    authState: "authenticated",
   },
   {
     title: "Login",

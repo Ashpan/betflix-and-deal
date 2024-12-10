@@ -5,20 +5,42 @@ export interface ICreateSessionPayload {
   created_by: string;
 }
 
-export interface IProfile {
-  id: string;
-  email: string;
-  username: string;
-  avatar_url: string | null;
-  display_name: string | null;
-}
-
-export interface IUser extends IProfile {
+export interface IUser extends IMember {
   spId: string;
   isOwner: boolean;
 }
 
-export interface ISessionParticipantProfile {
+export interface ISessionParticipant {
   id: string;
-  profiles: IProfile[];
+  session_id: string;
+  user_id: string;
+  buy_ins: number;
+  final_stack: number | null;
+  status: "invited" | "accepted" | "declined" | "completed";
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface ISessionParticipantProfile extends ISessionParticipant {
+  profiles: IMember;
+}
+
+export interface IMember {
+  id: string;
+  username: string;
+  display_name: string | null;
+  email: string;
+  avatar_url: string | null;
+}
+
+export interface ISessionDetails {
+  id: string;
+  code: string;
+  name: string;
+  created_by: string;
+  status: "pending" | "active" | "completed" | "cancelled";
+  buy_in_amount: number;
+  ended_at: string | null;
+  notes: string | null;
+  session_participants: ISessionParticipantProfile[];
 }

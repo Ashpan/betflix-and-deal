@@ -12,7 +12,7 @@ interface ISession {
   name: string;
   code: string;
   session_participants: {
-    initial_buy_in: number;
+    buy_ins: number;
   }[];
 }
 
@@ -21,7 +21,7 @@ export const ActiveSessions = async ({ userId }: ActiveSessionsProps) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("sessions")
-    .select("id, name, code, session_participants!inner(initial_buy_in)")
+    .select("id, name, code, session_participants!inner(buy_ins)")
     .neq("status", "completed")
     .neq("status", "cancelled")
     .eq("session_participants.user_id", userId);
@@ -44,7 +44,7 @@ export const ActiveSessions = async ({ userId }: ActiveSessionsProps) => {
                 <div>
                   <h3 className="font-semibold">{session.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Buy-in: ${session.session_participants[0].initial_buy_in}
+                    Buy-in: ${session.session_participants[0].buy_ins}
                   </p>
                   <p className="text-sm text-muted-foreground font-bold">
                     {session.code}

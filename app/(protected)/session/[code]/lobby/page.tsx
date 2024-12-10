@@ -8,12 +8,13 @@ import {
 import { LobbyMembersCard } from "@/app/components/LobbyMembersCard";
 import { LobbyJoinDialog } from "@/app/components/LobbyJoinDialog";
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
-const PokerSessionPage = async ({
-  params,
-}: {
+interface PokerSessionPageProps {
   params: Promise<{ code: string }>;
-}) => {
+}
+
+const PokerSessionPage = async ({ params }: PokerSessionPageProps) => {
   const code = (await params).code;
   const { data: sessionDetails, error: detailsError } =
     await getSessionDetails(code);
@@ -29,6 +30,16 @@ const PokerSessionPage = async ({
   if (!user || error) {
     return;
   }
+
+  const { data } = await supabase
+    .from("sessions")
+    .select("status")
+    .eq("code", code)
+    .single();
+  if (data?.status === "active") {
+    redirect(`/session/${code}/game`);
+  }
+
   const userInSession = await isUserInSession(user.id, code);
 
   return (
@@ -38,7 +49,7 @@ const PokerSessionPage = async ({
           sessionName={sessionDetails.name}
           sessionCode={sessionDetails.code}
           buyInAmount={sessionDetails.buy_in_amount}
-          allMembers={allMembers || []}
+          allMembers={allMembers}
         />
         <LobbyMembersCard initialMembers={sessionMembers} sessionCode={code} />
         <LobbyJoinDialog sessionCode={code} userInSession={userInSession} />

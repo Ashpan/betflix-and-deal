@@ -9,52 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      buy_ins: {
-        Row: {
-          amount: number;
-          created_at: string | null;
-          id: string;
-          session_id: string;
-          user_id: string;
-        };
-        Insert: {
-          amount: number;
-          created_at?: string | null;
-          id?: string;
-          session_id: string;
-          user_id: string;
-        };
-        Update: {
-          amount?: number;
-          created_at?: string | null;
-          id?: string;
-          session_id?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "buy_ins_session_id_fkey";
-            columns: ["session_id"];
-            isOneToOne: false;
-            referencedRelation: "sessions";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "buy_ins_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "player_stats";
-            referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "buy_ins_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -87,30 +41,30 @@ export type Database = {
       };
       session_participants: {
         Row: {
+          buy_ins: number;
           created_at: string | null;
           final_stack: number | null;
           id: string;
-          initial_buy_in: number;
           session_id: string;
           status: string | null;
           updated_at: string | null;
           user_id: string;
         };
         Insert: {
+          buy_ins: number;
           created_at?: string | null;
           final_stack?: number | null;
           id?: string;
-          initial_buy_in: number;
           session_id: string;
           status?: string | null;
           updated_at?: string | null;
           user_id: string;
         };
         Update: {
+          buy_ins?: number;
           created_at?: string | null;
           final_stack?: number | null;
           id?: string;
-          initial_buy_in?: number;
           session_id?: string;
           status?: string | null;
           updated_at?: string | null;
@@ -274,7 +228,71 @@ export type Database = {
       };
     };
     Functions: {
-      [_ in never]: never;
+      add_member_to_session: {
+        Args: {
+          p_session_code: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      calculate_session_settlements: {
+        Args: {
+          p_session_id: string;
+        };
+        Returns: {
+          payer_id: string;
+          payee_id: string;
+          amount: number;
+        }[];
+      };
+      delete_member_from_session: {
+        Args: {
+          p_session_code: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      get_session_member: {
+        Args: {
+          p_user_id: string;
+          p_session_code: string;
+        };
+        Returns: Json;
+      };
+      get_session_participants: {
+        Args: {
+          p_session_code: string;
+        };
+        Returns: Json;
+      };
+      get_user_settlements: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: {
+          session_id: string;
+          session_name: string;
+          session_code: string;
+          other_user_id: string;
+          other_user_name: string;
+          amount: number;
+          is_payer: boolean;
+          status: string;
+          created_at: string;
+        }[];
+      };
+      join_session: {
+        Args: {
+          p_session_code: string;
+        };
+        Returns: Json;
+      };
+      leave_session: {
+        Args: {
+          p_session_code: string;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       [_ in never]: never;

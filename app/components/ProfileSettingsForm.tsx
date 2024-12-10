@@ -110,6 +110,7 @@ export const ProfileSettingsForm = () => {
           toast({
             title: "Error",
             description: "Failed to update avatar",
+            variant: "destructive",
           });
           return;
         }
@@ -122,6 +123,7 @@ export const ProfileSettingsForm = () => {
           toast({
             title: "Error",
             description: "Failed to upload avatar",
+            variant: "destructive",
           });
           return;
         }
@@ -141,6 +143,7 @@ export const ProfileSettingsForm = () => {
         toast({
           title: "Error",
           description: "Failed to update avatar url",
+          variant: "destructive",
         });
         return;
       }
@@ -155,6 +158,7 @@ export const ProfileSettingsForm = () => {
         toast({
           title: "Error",
           description: "Failed to update display name",
+          variant: "destructive",
         });
         return;
       }

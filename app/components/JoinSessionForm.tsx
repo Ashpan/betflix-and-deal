@@ -36,6 +36,7 @@ export const JoinSessionForm = ({ user }: { user?: User }) => {
       return toast({
         title: "Error",
         description: "Unable to join session.",
+        variant: "destructive",
       });
     } else {
       toast({

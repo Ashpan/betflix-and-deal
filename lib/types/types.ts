@@ -44,3 +44,16 @@ export interface ISessionDetails {
   notes: string | null;
   session_participants: ISessionParticipantProfile[];
 }
+
+export interface IGameHistory {
+  session: {
+    id: string;
+    name: string;
+    code: string;
+    created_at: string;
+    ended_at: string;
+    status: string;
+  };
+  buy_ins: number;
+  final_stack: number | null;
+}

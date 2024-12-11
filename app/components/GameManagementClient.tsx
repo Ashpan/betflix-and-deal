@@ -142,6 +142,30 @@ export const GameManagementClient = ({
 
   const handleCashOut = async (userId: string, amount: number) => {
     if (!isOwner) return;
+
+    const activeParticipants = participants.filter(
+      (p) => p.status !== "completed" && p.status !== "declined",
+    );
+
+    if (
+      activeParticipants.length === 1 &&
+      activeParticipants[0].user_id === userId
+    ) {
+      const totalBuyIns = participants.reduce(
+        (sum, p) => sum + (p.buy_ins || 0),
+        0,
+      );
+      const totalCashOuts = participants.reduce((sum, p) => {
+        if (p.user_id !== userId && p.status === "completed") {
+          return sum + (p.final_stack || 0);
+        }
+        return sum;
+      }, 0);
+      const balancingAmount = totalBuyIns - totalCashOuts;
+
+      amount = balancingAmount;
+    }
+
     const { error } = await supabase
       .from("session_participants")
       .update({
@@ -157,6 +181,16 @@ export const GameManagementClient = ({
         description: error.message,
         variant: "destructive",
       });
+    } else {
+      if (
+        activeParticipants.length === 1 &&
+        activeParticipants[0].user_id === userId
+      ) {
+        toast({
+          title: "Final cash-out adjusted",
+          description: `Amount adjusted to ${amount.toFixed(2)} to balance the game`,
+        });
+      }
     }
   };
 

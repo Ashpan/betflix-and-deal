@@ -1,8 +1,10 @@
 create schema if not exists public;
 grant usage on schema "public" to anon;
 grant usage on schema "public" to authenticated;
-GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA "public" TO authenticated;
-GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA "public" TO anon;
+grant usage on schema "public" to postgres;
+grant usage on schema "public" to service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "public" TO postgres, anon, authenticated, service_role;
 
 
 -- Users table (extends Supabase auth.users)
@@ -59,6 +61,7 @@ create table public.settlements (
 create view public.player_stats as
 select
     p.id as user_id,
+    p.username,
     p.display_name,
     count(distinct sp.session_id) as total_sessions,
     sum(sp.final_stack - sp.buy_ins) as net_profit,

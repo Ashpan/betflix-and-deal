@@ -14,22 +14,22 @@ const BalancePage = async () => {
     .from("session_participants")
     .select(
       `
-            buy_ins,
-            final_stack,
-            session:sessions!inner (
-                id,
-                name,
-                code,
-                created_at,
-                ended_at,
-                status
-            )
-        `,
+      buy_ins,
+      final_stack,
+      ...sessions!inner (
+        id,
+        name,
+        code,
+        created_at,
+        ended_at,
+        status
+      )`,
     )
     .eq("user_id", user?.id)
     .eq("status", "completed")
     .order("created_at", { ascending: false })
     .returns<IGameHistory[]>();
+
   if (error) {
     return console.error("Error fetching game history:", error);
   }
@@ -43,6 +43,13 @@ const BalancePage = async () => {
     (game) => (game.final_stack || 0) > game.buy_ins,
   ).length;
 
+  const profitHistory = history.map((game) => {
+    return {
+      ...game,
+      profit: (game.final_stack || 0) - game.buy_ins,
+    };
+  });
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <h1 className="text-3xl font-bold">My Earnings</h1>
@@ -52,7 +59,7 @@ const BalancePage = async () => {
         totalCashOuts={totalCashOuts}
         profitableGames={profitableGames}
       />
-      <BalanceGameHistory history={history} />
+      <BalanceGameHistory history={profitHistory} />
       <BalanceEarningsChart history={history} />
     </div>
   );

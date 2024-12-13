@@ -46,14 +46,24 @@ export interface ISessionDetails {
 }
 
 export interface IGameHistory {
-  session: {
-    id: string;
-    name: string;
-    code: string;
-    created_at: string;
-    ended_at: string;
-    status: string;
-  };
+  id: string;
+  name: string;
+  code: string;
+  created_at: string;
+  ended_at: string;
+  status: string;
   buy_ins: number;
   final_stack: number | null;
+  profit: number;
+}
+
+export interface IGameSession {
+  name: string;
+  players: {
+    buy_ins: number;
+    final_stack: number;
+    avatar_url: string;
+    display_name: string;
+    username: string;
+  }[];
 }

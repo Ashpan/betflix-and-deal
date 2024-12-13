@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable } from "@/components/DataTable";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -21,7 +22,9 @@ export const LeaderboardTable = ({
   const columns: ColumnDef<Leaderboard>[] = [
     {
       accessorKey: "display_name",
-      header: "Player",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Player" />
+      ),
     },
     {
       accessorKey: "net_profit",
@@ -59,5 +62,11 @@ export const LeaderboardTable = ({
     },
   ];
 
-  return <DataTable data={leaderboardData} columns={columns} />;
+  return (
+    <Card>
+      <CardContent>
+        <DataTable data={leaderboardData} columns={columns} />
+      </CardContent>
+    </Card>
+  );
 };

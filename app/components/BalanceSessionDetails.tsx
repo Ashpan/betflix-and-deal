@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 type BalanceSessionDetailsProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  id: string;
+  id: string | null;
 };
 
 export const BalanceSessionDetails = ({

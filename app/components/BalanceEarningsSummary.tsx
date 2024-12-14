@@ -20,9 +20,7 @@ export const BalanceEarningsSummary = ({
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <Card>
         <CardHeader className="py-4">
-          <CardTitle className="text-sm text-muted-foreground">
-            Total Games
-          </CardTitle>
+          <CardTitle className="text-sm text-muted-foreground">Games</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalGames}</p>
@@ -32,7 +30,7 @@ export const BalanceEarningsSummary = ({
       <Card>
         <CardHeader className="py-4">
           <CardTitle className="text-sm text-muted-foreground">
-            Total Buy-ins
+            Buy-ins
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -43,7 +41,7 @@ export const BalanceEarningsSummary = ({
       <Card>
         <CardHeader className="py-4">
           <CardTitle className="text-sm text-muted-foreground">
-            Total Cash-outs
+            Cash-outs
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -54,7 +52,7 @@ export const BalanceEarningsSummary = ({
       <Card>
         <CardHeader className="py-4">
           <CardTitle className="text-sm text-muted-foreground">
-            Total Profit/Loss
+            Profit/Loss
           </CardTitle>
         </CardHeader>
         <CardContent>

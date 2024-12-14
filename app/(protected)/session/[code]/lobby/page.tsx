@@ -39,7 +39,6 @@ const PokerSessionPage = async ({ params }: PokerSessionPageProps) => {
   if (data?.status === "active") {
     redirect(`/session/${code}/game`);
   }
-
   const userInSession = await isUserInSession(user.id, code);
 
   return (

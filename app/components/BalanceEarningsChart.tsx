@@ -31,15 +31,14 @@ export const BalanceEarningsChart = ({
   const cumulativeData = history
     .sort(
       (a, b) =>
-        new Date(a.session.created_at).getTime() -
-        new Date(b.session.created_at).getTime(),
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     )
     .reduce((acc, game, index) => {
       const profit = (game.final_stack || 0) - game.buy_ins;
       const previousTotal = index > 0 ? acc[index - 1].totalProfit : 0;
 
       acc.push({
-        date: format(parseISO(game.session.created_at), "MMM d"),
+        date: format(parseISO(game.created_at), "MMM d"),
         profit: profit,
         totalProfit: previousTotal + profit,
         buyIn: game.buy_ins,

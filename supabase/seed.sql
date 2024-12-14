@@ -44,6 +44,8 @@ create table public.session_participants (
     unique(session_id, user_id)
 );
 
+alter table public.session_participants add column profit decimal generated always as (final_stack - buy_ins) stored;
+
 -- Settlements table (for tracking who owes who)
 create table public.settlements (
     id uuid primary key default gen_random_uuid(),
@@ -153,6 +155,15 @@ create policy "Session owners can update participants"
             from public.sessions
             where id = session_id
         )
+    );
+
+-- Policy to allow users to view settlements they're part of
+create policy "Can view settlements"
+    on public.settlements for select
+    using (
+        auth.uid() = payer_id
+        OR
+        auth.uid() = payee_id
     );
 
 -- Policy to allow users to leave a session

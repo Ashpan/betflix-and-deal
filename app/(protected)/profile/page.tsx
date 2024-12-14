@@ -1,7 +1,7 @@
 "use client";
 
 import { ProfileSettingsForm } from "@/app/components/ProfileSettingsForm";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/use-profile";
 
 const ProtectedPage = () => {
   const profile = useProfile();

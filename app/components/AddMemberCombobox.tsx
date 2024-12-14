@@ -2,7 +2,7 @@
 
 import { Combobox } from "@/components/ui/combobox";
 import { useToast } from "@/hooks/use-toast";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/use-profile";
 import { addMemberToSession } from "@/lib/supabase/queries";
 import { IMember } from "@/lib/types/types";
 

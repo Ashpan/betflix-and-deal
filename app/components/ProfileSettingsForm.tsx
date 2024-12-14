@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import Cropper from "react-easy-crop";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/use-profile";
 import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Avatar } from "@radix-ui/react-avatar";

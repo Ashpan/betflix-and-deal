@@ -22,7 +22,7 @@ export const metadata = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground overflow-x-hidden">
+      <body className="bg-background text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -30,22 +30,16 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           disableTransitionOnChange
         >
           <SidebarProvider>
-            <div className="flex min-h-screen relative">
+            <div className="flex h-screen w-full overflow-x-hidden">
               <AppSidebar />
-              <div className="md:hidden w-12 flex-shrink-0 border-r bg-background">
-                <div className="fixed p-4">
+              <div className="flex flex-1 flex-col overflow-x-hidden">
+                <header className="flex h-14 items-center px-4 pt-4 lg:px-4 lg:py-4">
                   <SidebarTrigger />
-                </div>
+                </header>
+                <main className="flex-0 w-full px-6 lg:px-6">{children}</main>
+                <Toaster />
               </div>
-              <main className="flex-1 w-full">
-                <div className="flex flex-col items-center w-full">
-                  <div className="w-full max-w-8xl p-5">
-                    <div className="flex flex-col gap-20">{children}</div>
-                  </div>
-                </div>
-              </main>
             </div>
-            <Toaster />
           </SidebarProvider>
         </ThemeProvider>
       </body>

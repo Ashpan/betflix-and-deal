@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/use-profile";
 import { leaveSession } from "@/lib/supabase/queries";
 import { PlayCircle, QrCode } from "lucide-react";
 import { useQRCode } from "next-qrcode";

@@ -1,24 +1,53 @@
-import { signInAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
+"use client";
+
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
-export default async function Login(props: { searchParams: Promise<Message> }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) {
-    return redirect("/");
-  }
+export default function Login() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const searchParams = await props.searchParams;
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const redirectTo = (formData.get("redirect_to") as string) || "/home";
+
+    const supabase = createClient();
+    supabase.auth
+      .signInWithPassword({
+        email,
+        password,
+      })
+      .then(({ error: signInError }) => {
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
+        router.push(redirectTo);
+      })
+      .catch((error) => {
+        setError("An unexpected error occurred. Please try again.");
+        console.error("Sign in error:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
   return (
-    <form className="flex-1 flex flex-col min-w-64">
+    <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-w-64">
       <h1 className="text-2xl font-medium">Sign in</h1>
       <p className="text-sm text-foreground">
         Dont have an account?{" "}
@@ -47,12 +76,12 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
         <Input
           type="hidden"
           name="redirect_to"
-          value={searchParams.redirect_to || "/home"}
+          value={searchParams.get("redirect_to") || "/home"}
         />
-        <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-          Sign in
+        <SubmitButton disabled={loading} type="submit">
+          {loading ? "Signing in..." : "Sign in"}
         </SubmitButton>
-        <FormMessage message={searchParams} />
+        {error && <p className="text-sm text-destructive mt-2">{error}</p>}
       </div>
     </form>
   );

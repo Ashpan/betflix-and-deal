@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Users, DollarSign, BarChart3 } from "lucide-react";
+import { Users, DollarSign, BarChart3, LogIn, ArrowUp } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -30,12 +30,14 @@ const LandingPage = async () => {
           <div className="flex gap-4 justify-center">
             <Link href="/sign-up">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                Sign Up Now <ArrowRight className="ml-2 h-5 w-5" />
+                Sign Up <ArrowUp className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-white">
-              Learn More
-            </Button>
+            <Link href="/sign-in">
+              <Button size="lg" variant="outline" className="text-white">
+                Sign In <LogIn className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
 

@@ -49,14 +49,13 @@ alter table public.session_participants add column profit decimal generated alwa
 -- Settlements table (for tracking who owes who)
 create table public.settlements (
     id uuid primary key default gen_random_uuid(),
-    session_id uuid references public.sessions(id) not null,
     payer_id uuid references public.profiles(id) not null,
     payee_id uuid references public.profiles(id) not null,
     amount decimal not null,
-    status text check (status in ('pending', 'completed')) default 'pending',
+    status text check (status in ('owed', 'pending', 'completed')) default 'owed',
     created_at timestamp with time zone default now(),
     settled_at timestamp with time zone,
-    unique(session_id, payer_id, payee_id)
+    unique(payer_id, payee_id)
 );
 
 -- Create views for leaderboard
@@ -90,27 +89,27 @@ alter table public.settlements enable row level security;
 
 -- Policy to allow public profiles to be visible to all
 create policy "Public profiles are visible to all"
-    on public.profiles for select
+    on public.profiles for select to authenticated
     using (true);
 
 -- Policy to allow users to insert their own profile
 create policy "Users can insert their own profile"
-    on public.profiles for insert
+    on public.profiles for insert to authenticated
     with check (auth.uid() = id);
 
 -- Policy to allow users to create new sessions
 create policy "Users can create new sessions"
-    on public.sessions for insert
+    on public.sessions for insert to authenticated
     with check (auth.uid() = created_by);
 
 -- Policy to allow users to update their own profile
 create policy "Users can update their own profile"
-    on public.profiles for update
+    on public.profiles for update to authenticated
     using (auth.uid() = id);
 
 -- Policy to allow users to view sessions they're part of or pending sessions
 create policy "Users can view sessions they're part of or by code"
-    on public.sessions for select
+    on public.sessions for select to authenticated
     using (
         ((auth.uid() IN ( SELECT session_participants.user_id
         FROM session_participants
@@ -119,17 +118,17 @@ create policy "Users can view sessions they're part of or by code"
 
 -- Policy for session owners to update their own sessions
 create policy "Session owners can update their own sessions"
-    on public.sessions for update
+    on public.sessions for update to authenticated
     using (auth.uid() = created_by);
 
 -- Policy to allow users to view session participants
 create policy "Can view session participants"
-    on public.session_participants for select
+    on public.session_participants for select to authenticated
     using (true);
 
 -- Policy to allow users to join pending sessions
 create policy "Users can join sessions"
-    on public.session_participants for insert
+    on public.session_participants for insert to authenticated
     with check (
         user_id = auth.uid()
         AND
@@ -143,12 +142,12 @@ create policy "Users can join sessions"
 
 -- Policy to allow users to update their own participation
 create policy "Users can update own participation"
-    on public.session_participants for update
+    on public.session_participants for update to authenticated
     using (user_id = auth.uid());
 
 -- Policy to allow session owners to update session participants
 create policy "Session owners can update participants"
-    on public.session_participants for update
+    on public.session_participants for update to authenticated
     using (
         auth.uid() in (
             select created_by
@@ -168,8 +167,13 @@ create policy "Can view settlements"
 
 -- Policy to allow users to leave a session
 create policy "Users can delete own participation"
-    on public.session_participants for delete
+    on public.session_participants for delete to authenticated
     using (user_id = auth.uid());
+
+-- Policy to view settlements if user is involved
+create policy "Users can view settlements they're involved in"
+    on public.settlements for select to authenticated
+    using (auth.uid() in (payer_id, payee_id));
 
 create policy "Authenicated user can upload avatar"
 on storage.objects for insert to authenticated with check (

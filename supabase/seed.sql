@@ -58,6 +58,26 @@ create table public.settlements (
     unique(payer_id, payee_id)
 );
 
+-- Add balances table
+create table public.balances (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references public.profiles(id) unique not null,
+    amount decimal default 0 not null,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+
+-- Add balance history table to track all changes
+create table public.balance_history (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references public.profiles(id) not null,
+    amount_changed decimal not null,
+    new_balance decimal not null,
+    source_type text not null check (source_type in ('session', 'settlement')),
+    source_id uuid not null, -- either session_id or settlement_id
+    created_at timestamp with time zone default now()
+);
+
 -- Create views for leaderboard
 create view public.player_stats as
 select
@@ -89,27 +109,27 @@ alter table public.settlements enable row level security;
 
 -- Policy to allow public profiles to be visible to all
 create policy "Public profiles are visible to all"
-    on public.profiles for select to authenticated
+    on public.profiles for select
     using (true);
 
 -- Policy to allow users to insert their own profile
 create policy "Users can insert their own profile"
-    on public.profiles for insert to authenticated
+    on public.profiles for insert
     with check (auth.uid() = id);
 
 -- Policy to allow users to create new sessions
 create policy "Users can create new sessions"
-    on public.sessions for insert to authenticated
+    on public.sessions for insert
     with check (auth.uid() = created_by);
 
 -- Policy to allow users to update their own profile
 create policy "Users can update their own profile"
-    on public.profiles for update to authenticated
+    on public.profiles for update
     using (auth.uid() = id);
 
 -- Policy to allow users to view sessions they're part of or pending sessions
 create policy "Users can view sessions they're part of or by code"
-    on public.sessions for select to authenticated
+    on public.sessions for select
     using (
         ((auth.uid() IN ( SELECT session_participants.user_id
         FROM session_participants
@@ -118,17 +138,17 @@ create policy "Users can view sessions they're part of or by code"
 
 -- Policy for session owners to update their own sessions
 create policy "Session owners can update their own sessions"
-    on public.sessions for update to authenticated
+    on public.sessions for update
     using (auth.uid() = created_by);
 
 -- Policy to allow users to view session participants
 create policy "Can view session participants"
-    on public.session_participants for select to authenticated
+    on public.session_participants for select
     using (true);
 
 -- Policy to allow users to join pending sessions
 create policy "Users can join sessions"
-    on public.session_participants for insert to authenticated
+    on public.session_participants for insert
     with check (
         user_id = auth.uid()
         AND
@@ -142,12 +162,12 @@ create policy "Users can join sessions"
 
 -- Policy to allow users to update their own participation
 create policy "Users can update own participation"
-    on public.session_participants for update to authenticated
+    on public.session_participants for update
     using (user_id = auth.uid());
 
 -- Policy to allow session owners to update session participants
 create policy "Session owners can update participants"
-    on public.session_participants for update to authenticated
+    on public.session_participants for update
     using (
         auth.uid() in (
             select created_by
@@ -156,23 +176,14 @@ create policy "Session owners can update participants"
         )
     );
 
--- Policy to allow users to view settlements they're part of
-create policy "Can view settlements"
-    on public.settlements for select
-    using (
-        auth.uid() = payer_id
-        OR
-        auth.uid() = payee_id
-    );
-
 -- Policy to allow users to leave a session
 create policy "Users can delete own participation"
-    on public.session_participants for delete to authenticated
+    on public.session_participants for delete
     using (user_id = auth.uid());
 
 -- Policy to view settlements if user is involved
 create policy "Users can view settlements they're involved in"
-    on public.settlements for select to authenticated
+    on public.settlements for select
     using (auth.uid() in (payer_id, payee_id));
 
 create policy "Authenicated user can upload avatar"
@@ -544,3 +555,202 @@ begin
     return true;
 end;
 $$;
+
+-- Function to update balance
+create or replace function update_user_balance(
+    p_user_id uuid,
+    p_amount_changed decimal,
+    p_source_type text,
+    p_source_id uuid
+)
+returns void
+language plpgsql
+security definer
+as $$
+declare
+    v_new_balance decimal;
+begin
+    insert into logging (action) values (CONCAT('update user balance: ',p_amount_changed));
+
+    -- Insert or update balance
+    insert into balances (user_id, amount)
+    values (p_user_id, p_amount_changed)
+    on conflict (user_id)
+    do update set
+        amount = balances.amount + p_amount_changed,
+        updated_at = now()
+    returning amount into v_new_balance;
+
+    -- Record history
+    insert into balance_history (
+        user_id,
+        amount_changed,
+        new_balance,
+        source_type,
+        source_id
+    ) values (
+        p_user_id,
+        p_amount_changed,
+        v_new_balance,
+        p_source_type,
+        p_source_id
+    );
+end;
+$$;
+
+-- Function to handle session participant updates
+create or replace function handle_participant_balance_change()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+    v_change decimal;
+begin
+    insert into logging (action) values (CONCAT('profits: ',OLD.profit, ', ', NEW.profit));
+    -- Calculate the change in profit
+    if OLD.profit IS NULL OR old.profit != NEW.profit then
+        insert into logging (action) values (CONCAT('profits are not equal ',OLD.profit, ', ', NEW.profit));
+        if OLD.profit is null then
+            v_change := NEW.profit;
+        else
+            v_change := NEW.profit - OLD.profit;
+        end if;
+        perform update_user_balance(
+            NEW.user_id,
+            v_change,
+            'session',
+            NEW.session_id
+        );
+    end if;
+
+    return NEW;
+end;
+$$;
+
+-- Triggers for balance updates
+create trigger on_participant_balance_change
+    after update of final_stack
+    on session_participants
+    for each row
+    execute function handle_participant_balance_change();
+
+-- Function to handle settlement completion
+create or replace function handle_settlement_completion()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+    if NEW.status = 'completed' and OLD.status != 'completed' then
+        -- Update payer's balance (they paid money, so balance goes up)
+        perform update_user_balance(
+            NEW.payer_id,
+            NEW.amount,
+            'settlement',
+            NEW.id
+        );
+
+        -- Update payee's balance (they got paid, so balance goes down)
+        perform update_user_balance(
+            NEW.payee_id,
+            -NEW.amount,
+            'settlement',
+            NEW.id
+        );
+    end if;
+
+    return NEW;
+end;
+$$;
+
+create trigger on_settlement_completion
+    after update
+    on settlements
+    for each row
+    execute function handle_settlement_completion();
+
+
+create or replace function calculate_settlements()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+    v_total_in decimal;
+    v_total_out decimal;
+    r_debtor record;
+    r_creditor record;
+    v_settlement_amount decimal;
+begin
+    create temporary table if not exists temp_debtors (
+        user_id uuid,
+        amount decimal
+    ) on commit drop;
+
+    create temporary table if not exists temp_creditors (
+        user_id uuid,
+        amount decimal
+    ) on commit drop;
+
+    truncate temp_debtors;
+    truncate temp_creditors;
+
+    insert into temp_debtors (user_id, amount)
+    select
+        user_id,
+        amount
+    from balances
+    where amount < 0
+    order by amount asc;
+
+    insert into temp_creditors (user_id, amount)
+    select
+        user_id,
+        amount
+    from balances
+    where amount >= 0
+    order by amount desc;
+
+    for r_debtor in select * from temp_debtors
+    loop
+        for r_creditor in select * from temp_creditors where amount > 0
+        loop
+            v_settlement_amount := least(abs(r_debtor.amount), r_creditor.amount);
+
+            if v_settlement_amount > 0 then
+                insert into settlements (payer_id, payee_id, amount)
+                values (r_debtor.user_id, r_creditor.user_id, v_settlement_amount)
+                on conflict (payer_id, payee_id)
+                do update set
+                    amount = round(settlements.amount + v_settlement_amount::numeric, 2),
+                    status = settlements.status;
+
+                update temp_debtors
+                set amount = amount + v_settlement_amount
+                where user_id = r_debtor.user_id;
+
+                update temp_creditors
+                set amount = amount - v_settlement_amount
+                where user_id = r_creditor.user_id;
+
+                r_debtor.amount := r_debtor.amount + v_settlement_amount;
+            end if;
+
+            if r_debtor.amount = 0 then
+                exit;
+            end if;
+        end loop;
+    end loop;
+
+    drop table temp_debtors;
+    drop table temp_creditors;
+    return NEW;
+end;
+$$;
+
+create trigger on_balance_update
+    after update
+    on balances
+    for each row
+    execute function calculate_settlements();

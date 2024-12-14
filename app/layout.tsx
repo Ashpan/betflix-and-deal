@@ -32,7 +32,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           <SidebarProvider>
             <div className="flex min-h-screen relative">
               <AppSidebar />
-              <div className="md:hidden w-13 flex-shrink-0 border-r bg-background">
+              <div className="md:hidden w-12 flex-shrink-0 border-r bg-background">
                 <div className="fixed p-4">
                   <SidebarTrigger />
                 </div>

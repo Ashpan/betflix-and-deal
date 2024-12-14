@@ -1,5 +1,6 @@
 import {
   Calendar,
+  CreditCard,
   DollarSign,
   Home,
   LogIn,
@@ -58,6 +59,12 @@ const items = [
     title: "Leaderboard",
     url: "/leaderboard",
     icon: Settings,
+    authState: "authenticated",
+  },
+  {
+    title: "Payments",
+    url: "/payment",
+    icon: CreditCard,
     authState: "authenticated",
   },
   {

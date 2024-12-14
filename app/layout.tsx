@@ -30,13 +30,13 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           disableTransitionOnChange
         >
           <SidebarProvider>
-            <div className="flex h-screen w-full overflow-hidden">
+            <div className="flex h-screen w-full">
               <AppSidebar />
-              <div className="flex flex-1 flex-col overflow-x-hidden">
+              <div className="flex flex-1 flex-col overflow-y-auto">
                 <header className="flex h-14 items-center px-4 pt-4 lg:px-4 lg:py-4">
                   <SidebarTrigger />
                 </header>
-                <main className="flex-0 w-full px-6 lg:px-6">{children}</main>
+                <main className="flex-1 px-6 lg:px-6">{children}</main>
                 <Toaster />
               </div>
             </div>

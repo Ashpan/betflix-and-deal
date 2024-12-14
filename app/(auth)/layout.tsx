@@ -1,9 +1,7 @@
 import React from "react";
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="max-w-7xl flex flex-col gap-12 items-start">{children}</div>
-  );
+  return <div className="container mx-auto py-6 space-y-6">{children}</div>;
 };
 
 export default Layout;

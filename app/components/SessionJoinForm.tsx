@@ -55,7 +55,10 @@ export const JoinSessionForm = ({ user }: { user?: User }) => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="w-full md:w-2/3 space-y-6"
+          >
             <ControlledTextInput
               form={form}
               name="sessionId"

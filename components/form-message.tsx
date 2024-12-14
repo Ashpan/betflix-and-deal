@@ -1,7 +1,13 @@
-export type Message =
+type BaseMessage = {
+  redirect_to?: string;
+};
+
+type MessageContent =
   | { success: string }
   | { error: string }
   | { message: string };
+
+export type Message = BaseMessage & MessageContent;
 
 export function FormMessage({ message }: { message: Message }) {
   return (

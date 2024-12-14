@@ -44,6 +44,11 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           placeholder="Your password"
           required
         />
+        <Input
+          type="hidden"
+          name="redirect_to"
+          value={searchParams.redirect_to || "/home"}
+        />
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Sign in
         </SubmitButton>

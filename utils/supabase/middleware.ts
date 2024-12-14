@@ -1,6 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+const publicUrls = [
+  "/",
+  "/sign-in",
+  "/sign-up",
+  "/forgot-password",
+  "/reset-password",
+];
+
 export const updateSession = async (request: NextRequest) => {
   // This `try/catch` block is only here for the interactive tutorial.
   // Feel free to remove once you have Supabase connected.
@@ -37,16 +45,21 @@ export const updateSession = async (request: NextRequest) => {
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
-
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     // protected routes
-    if (request.nextUrl.pathname.startsWith("/profile") && user.error) {
-      return NextResponse.redirect(new URL("/sign-in", request.url));
+    const pathname = request.nextUrl.pathname;
+    const isPublicRoute =
+      publicUrls.includes(pathname) ||
+      pathname.startsWith("/api/auth") ||
+      pathname.startsWith("/_next") ||
+      pathname === "/favicon.ico";
+    if (!user && !isPublicRoute) {
+      const redirectUrl = new URL("/sign-in", request.url);
+      redirectUrl.searchParams.set("redirect_to", pathname);
+      return NextResponse.redirect(redirectUrl);
     }
-
-    // if (request.nextUrl.pathname === "/" && !user.error) {
-    //   return NextResponse.redirect(new URL("/protected", request.url));
-    // }
 
     return response;
   } catch (e) {

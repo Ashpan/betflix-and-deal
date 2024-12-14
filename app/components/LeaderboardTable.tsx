@@ -46,7 +46,7 @@ export const LeaderboardTable = ({
         <DataTableColumnHeader column={column} title="Avg Profit/Session" />
       ),
       cell: ({ row }) => {
-        const netProfit: number = row.getValue("net_profit");
+        const netProfit: number = row.getValue("avg_profit_per_session");
         const formatted = new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",

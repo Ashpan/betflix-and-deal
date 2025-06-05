@@ -52,7 +52,7 @@ export const updateSession = async (request: NextRequest) => {
     const pathname = request.nextUrl.pathname;
     const isPublicRoute =
       publicUrls.includes(pathname) ||
-      pathname.startsWith("/api/auth") ||
+      pathname.startsWith("/api") ||
       pathname.startsWith("/_next") ||
       pathname === "/favicon.ico";
     if (!user && !isPublicRoute) {

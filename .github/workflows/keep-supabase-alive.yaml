@@ -1,0 +1,10 @@
+name: Keep Supabase Alive
+on:
+  schedule:
+    - cron: "0 */6 * * *" # Every 6 hours
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase via Vercel
+        run: curl -f https://poker.ashpanraskar.com/api/keep-alive
